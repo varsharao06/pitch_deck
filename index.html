@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CHAKRA Investor Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg: #000000;
+      --bg-deep: #0B192C;
+      --panel: rgba(11, 24, 39, 0.96);
+      --panel-2: rgba(15, 29, 46, 0.96);
+      --panel-3: rgba(8, 17, 24, 0.96);
+      --border: rgba(120, 249, 242, 0.15);
+      --cyan: #00E5FF;
+      --cyan-soft: #81F8FF;
+      --green: #7AF7C3;
+      --green-soft: #9CF6D1;
+      --white: #F4FBFF;
+      --muted: #A8BDCE;
+      --warning: #FFB347;
+      --warning-soft: #FFD7A3;
+      --text-soft: #D8EAF5;
+      --shadow: 0 0 24px rgba(0, 229, 255, 0.12);
+      --radius: 18px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--white);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(0, 229, 255, 0.08), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(122, 247, 195, 0.07), transparent 26%),
+        var(--bg);
+    }
+
+    a { color: var(--cyan-soft); text-decoration: none; }
+    button, input, select { font: inherit; }
+
+    .app-shell {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 22px 18px 80px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      background: rgba(10, 18, 29, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(0,229,255,0.16), rgba(122,247,195,0.08));
+      border: 1px solid rgba(122,247,195,0.4);
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: var(--white);
+    }
+
+    .brand-name {
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--cyan-soft);
+      line-height: 1.1;
+    }
+
+    .brand-sub {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .tab-btn {
+      background: rgba(14, 22, 34, 0.9);
+      border: 1px solid rgba(120,249,242,0.15);
+      color: var(--white);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+      font-size: 0.88rem;
+    }
+
+    .tab-btn:hover {
+      border-color: rgba(120,249,242,0.28);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.06);
+    }
+
+    .tab-btn.active {
+      background: rgba(0, 229, 255, 0.08);
+      border-color: rgba(120,249,242,0.28);
+      color: var(--cyan-soft);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      background: linear-gradient(180deg, rgba(11, 24, 39, 0.96), rgba(15, 29, 45, 0.92));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .stat-value {
+      font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+    }
+
+    .stat-foot {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green-soft);
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(11, 24, 39, 0.96), rgba(16, 31, 48, 0.92));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .investment-layout {
+      display: grid;
+      grid-template-columns: 520px minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .controls-panel {
+      padding: 18px 16px 16px;
+    }
+
+    .section-kicker {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1.08rem;
+      letter-spacing: 0.04em;
+    }
+
+    .live-pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(120,249,242,0.2);
+      background: rgba(0,229,255,0.05);
+      color: var(--cyan-soft);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .accordion-item {
+      border: 1px solid rgba(120,249,242,0.08);
+      background: rgba(9, 18, 29, 0.76);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .accordion-item.open .accordion-content {
+      display: block;
+    }
+
+    .accordion-summary {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 14px 12px;
+      border: none;
+      background: transparent;
+      color: var(--white);
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .summary-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .category-check {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--cyan);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .category-name {
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .category-total {
+      color: var(--green-soft);
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .accordion-content {
+      display: none;
+      padding: 0 12px 12px;
+    }
+
+    .sub-item {
+      border: 1px solid rgba(120,249,242,0.08);
+      background: rgba(11,24,39,0.45);
+      border-radius: 12px;
+      padding: 12px 10px 10px;
+      margin-top: 10px;
+    }
+
+    .sub-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .sub-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sub-check {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--cyan);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .item-label {
+      font-size: 0.93rem;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--white);
+    }
+
+    .item-cost {
+      color: var(--green-soft);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .field input {
+      width: 100%;
+      background: rgba(8, 14, 22, 0.96);
+      border: 1px solid rgba(120,249,242,0.16);
+      border-radius: 10px;
+      padding: 9px 10px;
+      color: var(--white);
+      font-size: 0.96rem;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: rgba(0,229,255,0.36);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+    }
+
+    .summary-box {
+      margin-top: 18px;
+      border: 1px solid rgba(120,249,242,0.1);
+      background: rgba(0,229,255,0.03);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .summary-box h3 {
+      margin: 0 0 10px;
+      color: var(--green-soft);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .mini-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .mini-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      border-radius: 10px;
+      background: rgba(11,24,39,0.72);
+      border: 1px solid rgba(120,249,242,0.08);
+      padding: 8px 10px;
+      font-size: 0.88rem;
+    }
+
+    .mini-list span {
+      color: var(--muted);
+    }
+
+    .mini-list strong {
+      color: var(--cyan-soft);
+      font-weight: 700;
+    }
+
+    .chart-panel {
+      padding: 18px 18px 12px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 500px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .comparison-panel, .table-panel, .hardware-panel, .market-panel {
+      padding: 18px;
+    }
+
+    .comparison-wrap {
+      position: relative;
+      height: 340px;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      width: 100%;
+      border: 1px solid rgba(120,249,242,0.08);
+      background: rgba(9,18,29,0.55);
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(120,249,242,0.08);
+      vertical-align: top;
+    }
+
+    th {
+      background: rgba(12, 24, 37, 0.9);
+      color: var(--cyan-soft);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    td {
+      color: var(--white);
+      background: rgba(12,24,37,0.28);
+      font-size: 0.9rem;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(0,229,255,0.06);
+      border:1px solid rgba(120,249,242,0.18);
+      color: var(--cyan-soft);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.7;
+      margin-top: 14px;
+    }
+
+    .tab-link {
+      display: inline-block;
+      margin-top: 18px;
+      color: var(--cyan-soft);
+      padding-bottom: 2px;
+      border-bottom: 1px solid rgba(120,249,242,0.25);
+      font-size: 0.76rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .hardware-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    .hardware-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .meta-box {
+      background: rgba(8, 17, 24, 0.8);
+      border: 1px solid rgba(120,249,242,0.08);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+
+    .meta-label {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .meta-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .hardware-cards {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .hardware-card {
+      width: 100%;
+      text-align: left;
+      background: rgba(11,24,39,0.72);
+      border: 1px solid rgba(120,249,242,0.1);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--white);
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .hardware-card.active {
+      border-color: rgba(120,249,242,0.32);
+      box-shadow: inset 0 0 0 1px rgba(120,249,242,0.18);
+      background: rgba(0,229,255,0.05);
+    }
+
+    .hardware-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.96rem;
+    }
+
+    .hardware-card small {
+      display: block;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .device-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+      background: linear-gradient(180deg, rgba(12, 25, 40, 0.92), rgba(9, 18, 29, 0.98));
+      border: 1px solid rgba(120,249,242,0.1);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .device-visual img {
+      width: min(100%, 340px);
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 10px 20px rgba(0,229,255,0.12));
+    }
+
+    .validator-card {
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 14px;
+      background: rgba(0,229,255,0.03);
+      border: 1px solid rgba(120,249,242,0.1);
+    }
+
+    .result-badge {
+      display: inline-block;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .result-pass {
+      background: rgba(122,247,195,0.12);
+      border-color: rgba(122,247,195,0.2);
+      color: var(--green-soft);
+    }
+
+    .result-fail {
+      background: rgba(255,179,71,0.1);
+      border-color: rgba(255,179,71,0.2);
+      color: var(--warning-soft);
+    }
+
+    .explain {
+      margin-top: 12px;
+      color: var(--text-soft);
+      line-height: 1.7;
+      font-size: 0.96rem;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-group label {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .input-group input,
+    .input-group select {
+      background: rgba(8, 14, 22, 0.96);
+      color: var(--white);
+      border: 1px solid rgba(120,249,242,0.16);
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus {
+      border-color: rgba(0,229,255,0.36);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+    }
+
+    .timeline-wrap {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .timeline-column {
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .timeline-column::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 7px;
+      width: 2px;
+      height: 100%;
+      background: rgba(120,249,242,0.2);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding: 0 0 16px 20px;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -14px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(0,229,255,0.12);
+    }
+
+    .timeline-tag {
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(0,229,255,0.06);
+      border: 1px solid rgba(120,249,242,0.2);
+      color: var(--cyan-soft);
+    }
+
+    .timeline-item h4 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .timeline-item p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.9rem;
+    }
+
+    .market-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(170px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .market-box {
+      background: rgba(8,17,24,0.82);
+      border: 1px solid rgba(120,249,242,0.08);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+
+    .market-box .label {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .market-box .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .slider-block {
+      margin-top: 20px;
+      padding: 18px;
+      background: rgba(0,229,255,0.03);
+      border: 1px solid rgba(120,249,242,0.1);
+      border-radius: 14px;
+    }
+
+    .slider-block h3 {
+      margin: 0 0 16px;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      color: var(--green-soft);
+      text-transform: uppercase;
+    }
+
+    .slider-group {
+      display: grid;
+      gap: 18px;
+    }
+
+    .slider-row {
+      display: grid;
+      gap: 8px;
+    }
+
+    .slider-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.92rem;
+    }
+
+    .slider-head span:last-child {
+      color: var(--cyan-soft);
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
+    @media (max-width: 1100px) {
+      .investment-layout, .bottom-grid, .hardware-grid, .timeline-wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-tabs {
+        justify-content: flex-start;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(160px, 1fr));
+      }
+
+      .market-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .input-grid, .hardware-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">C</div>
+        <div>
+          <div class="brand-name">CHAKRA</div>
+          <div class="brand-sub">Investor Dashboard</div>
+        </div>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-tab="investment">Investment &amp; Requirements Breakdown</button>
+        <button class="tab-btn" data-tab="hardware">Compute &amp; Hardware Validator</button>
+        <button class="tab-btn" data-tab="market">Timeline &amp; Market ROI</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="investment" class="tab-panel active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Initial Cost</span>
+            <div id="initialCostStat" class="stat-value">₹0</div>
+            <div class="stat-foot">Setup and annual fees</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Monthly Total</span>
+            <div id="monthlyTotalStat" class="stat-value">₹0</div>
+            <div class="stat-foot">Recurring monthly spend</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Projected Revenue</span>
+            <div id="projectedRevenueStat" class="stat-value">₹0</div>
+            <div class="stat-foot">Per month uplift</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Projected Balance</span>
+            <div id="projectedBalanceStat" class="stat-value">₹0</div>
+            <div class="stat-foot">24-month projection</div>
+          </div>
+        </div>
+
+        <div class="investment-layout">
+          <section class="panel controls-panel">
+            <div class="header-row">
+              <div>
+                <span class="section-kicker">Model Inputs</span>
+                <h2 class="panel-title">Expense Calculator</h2>
+              </div>
+              <span class="live-pill">Live</span>
+            </div>
+
+            <div id="accordionRoot" class="accordion"></div>
+
+            <div class="summary-box">
+              <h3>Projected Profit / Loss</h3>
+              <ul id="profitList" class="mini-list"></ul>
+            </div>
+          </section>
+
+          <section class="panel chart-panel">
+            <span class="section-kicker">Forecast</span>
+            <h2 class="panel-title">ROI Growth Curve</h2>
+            <div class="chart-wrap">
+              <canvas id="roiChart"></canvas>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="hardware" class="tab-panel">
+        <div class="panel hardware-panel">
+          <span class="section-kicker">AI Model Validation</span>
+          <h2 class="panel-title">Compute &amp; Hardware Validator</h2>
+
+          <div class="input-row">
+            <div class="input-group">
+              <label for="modelParams">Model Parameter Size</label>
+              <input id="modelParams" type="number" min="1" max="500" step="0.1" value="8" />
+            </div>
+
+            <div class="input-group">
+              <label for="precisionSelect">Precision</label>
+              <select id="precisionSelect">
+                <option value="FP16">FP16</option>
+                <option value="INT8">INT8</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="hardware-grid">
+            <div>
+              <div class="hardware-cards" id="hardwareCards"></div>
+
+              <div class="hardware-summary">
+                <div class="meta-box">
+                  <span class="meta-label">Required VRAM</span>
+                  <div id="requiredVRAM" class="meta-value">0 GB</div>
+                </div>
+
+                <div class="meta-box">
+                  <span class="meta-label">Required Compute</span>
+                  <div id="requiredTOPS" class="meta-value">0 TOPS</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="device-visual">
+              <img id="hardwareVisual" alt="Selected hardware illustration" />
+            </div>
+          </div>
+
+          <div class="validator-card">
+            <div id="resultBadge" class="result-badge result-pass">PASS</div>
+            <div id="resultText" class="explain"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="market" class="tab-panel">
+        <div class="panel market-panel">
+          <span class="section-kicker">Startup Journey</span>
+          <h2 class="panel-title">Timeline &amp; Market ROI</h2>
+
+          <div class="timeline-wrap">
+            <div class="timeline-column">
+              <div class="timeline-item">
+                <span class="timeline-tag">2024</span>
+                <h4>Problem Validation</h4>
+                <p>Clinical interviews, device feasibility checks, and early endoscopy workflow assessments confirmed that real-time lesion recognition needed edge inference with minimal latency.</p>
+              </div>
+
+              <div class="timeline-item">
+                <span class="timeline-tag">2024</span>
+                <h4>MVP</h4>
+                <p>Core YOLOv8 + Vision Transformer pipeline deployed in simulation and early lab validation for colonoscopy image triage and detection confidence scoring.</p>
+              </div>
+
+              <div class="timeline-item">
+                <span class="timeline-tag">2025</span>
+                <h4>Validation &amp; Pilot</h4>
+                <p>Clinical proof-of-concept with endoscopy units, analyzing ADR uplift and operational fit for edge-native deployment.</p>
+              </div>
+            </div>
+
+            <div class="timeline-column">
+              <div class="timeline-item">
+                <span class="timeline-tag">2026</span>
+                <h4>Commercial Launch</h4>
+                <p>Deployment-ready imaging pipeline for clinic networks and referral centers, integrated with local hardware and oncology reporting workflows.</p>
+              </div>
+
+              <div class="timeline-item">
+                <span class="timeline-tag">2027</span>
+                <h4>Regional Scale-Up</h4>
+                <p>Expansion into high-volume GI centers with analytics dashboards, reimbursement pathways, and structured clinical reporting for multi-site adoption.</p>
+              </div>
+
+              <div class="timeline-item">
+                <span class="timeline-tag">2028+</span>
+                <h4>Platform Expansion</h4>
+                <p>Broader screening applications, surgical workflows, and multi-model edge analytics across gastrointestinal and oncology care pathways.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="slider-block">
+            <h3>Market ROI Inputs</h3>
+
+            <div class="slider-group">
+              <div class="slider-row">
+                <div class="slider-head">
+                  <span>Target Market Capture</span>
+                  <span id="captureValue">8%</span>
+                </div>
+                <input id="captureSlider" type="range" min="1" max="30" step="1" value="8" />
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-head">
+                  <span>Colorectal Cancer Patient Volume Growth</span>
+                  <span id="growthValue">18%</span>
+                </div>
+                <input id="growthSlider" type="range" min="0" max="40" step="1" value="18" />
+              </div>
+            </div>
+          </div>
+
+          <div class="market-summary">
+            <div class="market-box">
+              <span class="label">Projected Annual Value</span>
+              <div id="annualValue" class="value">₹0</div>
+            </div>
+
+            <div class="market-box">
+              <span class="label">Addressable Patient Volume</span>
+              <div id="patientVolume" class="value">0</div>
+            </div>
+
+            <div class="market-box">
+              <span class="label">Projected Return</span>
+              <div id="projectedReturn" class="value">₹0</div>
+            </div>
+          </div>
+
+          <div class="comparison-panel" style="margin-top: 20px; border:1px solid rgba(120,249,242,0.08); border-radius: 14px; background: rgba(8,17,24,0.76);">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+              <div>
+                <span class="section-kicker" style="margin-bottom: 4px;">Benchmark</span>
+                <h3 style="margin:0; font-size:1rem;">Market Value Capture</h3>
+              </div>
+            </div>
+            <div class="comparison-wrap">
+              <canvas id="marketChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = [
+      {
+        key: "hardware",
+        label: "Hardware Setup",
+        open: true,
+        items: [
+          { id: "nvidia_dgx_spark", label: "NVIDIA DGX Spark", enabled: true, qty: 4, cost: 799000 },
+          { id: "diagnostic_monitor_setup", label: "Diagnostic Monitor Setup", enabled: true, qty: 1, cost: 45000 },
+          { id: "clinical_tablet", label: "Clinical Tablet", enabled: true, qty: 1, cost: 35000 }
+        ]
+      },
+      {
+        key: "deployment",
+        label: "App Deployment",
+        open: true,
+        items: [
+          { id: "apple_app_store_fee", label: "Apple App Store Fee", enabled: true, qty: 1, cost: 8300 },
+          { id: "google_play_store_fee", label: "Google Play Store Fee", enabled: true, qty: 1, cost: 2100 },
+          { id: "microsoft_windows_store", label: "Microsoft Windows Store", enabled: true, qty: 1, cost: 8300 },
+          { id: "website_hosting", label: "Website Hosting", enabled: true, qty: 1, cost: 5000 }
+        ]
+      },
+      {
+        key: "operations",
+        label: "Operational Costs",
+        open: true,
+        items: [
+          { id: "commercial_electricity", label: "Commercial Electricity", enabled: true, qty: 1, cost: 20000 },
+          { id: "commercial_broadband", label: "Commercial Broadband", enabled: true, qty: 1, cost: 3000 },
+          { id: "rent_ac", label: "Rent & Air Conditioning", enabled: true, qty: 1, cost: 40000 }
+        ]
+      }
+    ];
+
+    function formatCurrency(value) {
+      if (!Number.isFinite(value)) return "₹0";
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0
+      }).format(Math.round(value));
+    }
+
+    function formatCompact(value) {
+      const abs = Math.abs(value);
+      if (abs >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
+      if (abs >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+      return `₹${Math.round(value)}`;
+    }
+
+    function getCategoryTotal(category) {
+      return category.items.reduce((sum, item) => {
+        if (!item.enabled) return sum;
+        return sum + (Number(item.qty || 0) * Number(item.cost || 0));
+      }, 0);
+    }
+
+    function getInitialCost() {
+      return state.reduce((sum, category) => sum + getCategoryTotal(category), 0);
+    }
+
+    function getMonthlyTotal() {
+      const opCategory = state.find(cat => cat.key === "operations");
+      if (!opCategory) return 0;
+      return opCategory.items.reduce((sum, item) => {
+        if (!item.enabled) return sum;
+        return sum + (Number(item.qty || 0) * Number(item.cost || 0));
+      }, 0);
+    }
+
+    function getProjectedRevenue() {
+      const params = 150;
+      const adr = 0.18;
+      const revenuePerPolyp = 2500;
+      return params * adr * revenuePerPolyp;
+    }
+
+    function calculateLiveProjection() {
+      const initialCost = getInitialCost();
+      const monthlyTotal = getMonthlyTotal();
+      const monthlyRevenue = getProjectedRevenue();
+      const net24 = (monthlyRevenue * 24) - (initialCost + (monthlyTotal * 24));
+
+      return {
+        initialCost,
+        monthlyTotal,
+        monthlyRevenue,
+        net24
+      };
+    }
+
+    function renderSummaryStats() {
+      const metrics = calculateLiveProjection();
+      document.getElementById("initialCostStat").textContent = formatCurrency(metrics.initialCost);
+      document.getElementById("monthlyTotalStat").textContent = formatCurrency(metrics.monthlyTotal);
+      document.getElementById("projectedRevenueStat").textContent = formatCurrency(metrics.monthlyRevenue);
+      document.getElementById("projectedBalanceStat").textContent = formatCurrency(metrics.net24);
+    }
+
+    function renderProfitList() {
+      const list = document.getElementById("profitList");
+      list.innerHTML = "";
+
+      const initialCost = getInitialCost();
+      const monthlyTotal = getMonthlyTotal();
+      const monthlyRevenue = getProjectedRevenue();
+
+      [4, 6, 10, 12, 24].forEach((month) => {
+        const value = (monthlyRevenue * month) - (initialCost + (monthlyTotal * month));
+        const li = document.createElement("li");
+        li.innerHTML = `<span>Month ${month}</span><strong>${formatCompact(value)}</strong>`;
+        list.appendChild(li);
+      });
+    }
+
+    function renderROIChart() {
+      const ctx = document.getElementById("roiChart").getContext("2d");
+      const initialCost = getInitialCost();
+      const monthlyTotal = getMonthlyTotal();
+      const monthlyRevenue = getProjectedRevenue();
+
+      const months = Array.from({ length: 24 }, (_, i) => i + 1);
+      const cumulativeExpense = months.map(month => initialCost + (monthlyTotal * month));
+      const cumulativeRevenue = months.map(month => monthlyRevenue * month);
+
+      if (window.roiChartInstance) {
+        window.roiChartInstance.destroy();
+      }
+
+      window.roiChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: months,
+          datasets: [
+            {
+              label: "Cumulative Revenue",
+              data: cumulativeRevenue,
+              borderColor: "#00E5FF",
+              backgroundColor: "rgba(0,229,255,0.10)",
+              borderWidth: 3,
+              fill: false,
+              tension: 0.28,
+              pointRadius: (ctx) => [4, 6, 10, 12, 24].includes(ctx.dataIndex + 1) ? 5 : 0,
+              pointBackgroundColor: "#00E5FF",
+              pointBorderColor: "#FFFFFF"
+            },
+            {
+              label: "Cumulative Expense",
+              data: cumulativeExpense,
+              borderColor: "#7AF7C3",
+              backgroundColor: "rgba(122,247,195,0.10)",
+              borderWidth: 3,
+              fill: false,
+              tension: 0.28,
+              pointRadius: (ctx) => [4, 6, 10, 12, 24].includes(ctx.dataIndex + 1) ? 5 : 0,
+              pointBackgroundColor: "#7AF7C3",
+              pointBorderColor: "#FFFFFF"
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "nearest", intersect: false },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#F4FBFF",
+                usePointStyle: true,
+                pointStyle: "circle",
+                boxWidth: 12
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Months",
+                color: "#F4FBFF"
+              },
+              ticks: { color: "#D8EBF8" },
+              grid: { color: "rgba(120,249,242,0.08)" }
+            },
+            y: {
+              title: {
+                display: true,
+                text: "Amount (₹)",
+                color: "#F4FBFF"
+              },
+              ticks: {
+                color: "#D8EBF8",
+                callback: (value) => `₹${(Number(value)/100000).toFixed(0)}L`
+              },
+              grid: { color: "rgba(120,249,242,0.08)" }
+            }
+          }
+        }
+      });
+    }
+
+    function renderAccordion() {
+      const root = document.getElementById("accordionRoot");
+      root.innerHTML = state.map(category => {
+        const total = getCategoryTotal(category);
+        return `
+          <div class="accordion-item ${category.open ? "open" : ""}" data-category="${category.key}">
+            <button class="accordion-summary" type="button">
+              <div class="summary-left">
+                <input class="category-check" type="checkbox" data-category-toggle="${category.key}" ${category.items.every(item => item.enabled) ? "checked" : ""} />
+                <span class="category-name">${category.label}</span>
+              </div>
+              <span class="category-total">${formatCurrency(total)}</span>
+            </button>
+
+            <div class="accordion-content">
+              ${category.items.map(item => {
+                const itemTotal = (Number(item.qty || 0) * Number(item.cost || 0));
+                return `
+                  <div class="sub-item">
+                    <div class="sub-top">
+                      <div class="sub-main">
+                        <input class="sub-check" type="checkbox" data-path="${category.key}.${item.id}.enabled" ${item.enabled ? "checked" : ""} />
+                        <span class="item-label">${item.label}</span>
+                      </div>
+                      <span class="item-cost">${formatCurrency(itemTotal)}</span>
+                    </div>
+                    <div class="input-grid">
+                      <div class="field">
+                        <label>Qty</label>
+                        <input type="number" min="0" step="1" value="${item.qty}" data-path="${category.key}.${item.id}.qty" />
+                      </div>
+                      <div class="field">
+                        <label>Cost</label>
+                        <input type="number" min="0" step="100" value="${item.cost}" data-path="${category.key}.${item.id}.cost" />
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".accordion-summary").forEach(button => {
+        button.addEventListener("click", (event) => {
+          const item = event.currentTarget.closest(".accordion-item");
+          const categoryKey = item.dataset.category;
+          const category = state.find(cat => cat.key === categoryKey);
+          category.open = !category.open;
+          renderAccordion();
+          refreshDashboard();
+        });
+      });
+
+      document.querySelectorAll("[data-category-toggle]").forEach((checkbox) => {
+        checkbox.addEventListener("change", (event) => {
+          const category = state.find(cat => cat.key === event.target.dataset.categoryToggle);
+          if (!category) return;
+          category.items.forEach(item => {
+            item.enabled = event.target.checked;
+          });
+          renderAccordion();
+          refreshDashboard();
+        });
+      });
+
+      document.querySelectorAll("[data-path]").forEach((input) => {
+        const parts = input.dataset.path.split(".");
+        if (parts.length < 3) return;
+
+        const categoryKey = parts[0];
+        const itemId = parts[1];
+        const field = parts[2];
+
+        const category = state.find(cat => cat.key === categoryKey);
+        const item = category && category.items.find(entry => entry.id === itemId);
+        if (!item) return;
+
+        if (field === "enabled") {
+          input.addEventListener("change", (event) => {
+            item.enabled = event.target.checked;
+            renderAccordion();
+            refreshDashboard();
+          });
+        } else if (field === "qty") {
+          input.addEventListener("input", (event) => {
+            item.qty = Math.max(0, Number(event.target.value) || 0);
+            renderAccordion();
+            refreshDashboard();
+          });
+        } else if (field === "cost") {
+          input.addEventListener("input", (event) => {
+            item.cost = Math.max(0, Number(event.target.value) || 0);
+            renderAccordion();
+            refreshDashboard();
+          });
+        }
+      });
+    }
+
+    function refreshDashboard() {
+      renderSummaryStats();
+      renderProfitList();
+      renderROIChart();
+    }
+
+    const hardwareOptions = [
+      {
+        id: "dgx_spark",
+        name: "NVIDIA DGX Spark",
+        vramGB: 128,
+        tops: 1300,
+        image: makeHardwareSVG("#00E5FF", "#0B192C", "DGX Spark")
+      },
+      {
+        id: "rtx_6000_blackwell",
+        name: "RTX 6000 Blackwell",
+        vramGB: 96,
+        tops: 2200,
+        image: makeHardwareSVG("#7AF7C3", "#0B192C", "RTX 6000")
+      },
+      {
+        id: "edge_npu",
+        name: "Standard Edge NPU",
+        vramGB: 32,
+        tops: 200,
+        image: makeHardwareSVG("#A4B7C5", "#0B192C", "Edge NPU")
+      }
+    ];
+
+    let selectedHardwareId = "dgx_spark";
+
+    function makeHardwareSVG(accent, background, title) {
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="520" height="360" viewBox="0 0 520 360">
+          <defs>
+            <linearGradient id="bgGrad" x1="0" x2="1">
+              <stop offset="0%" stop-color="${background}" />
+              <stop offset="100%" stop-color="#081720" />
+            </linearGradient>
+          </defs>
+          <rect width="520" height="360" fill="url(#bgGrad)" />
+          <rect x="110" y="78" width="300" height="174" rx="22" fill="${accent}" opacity="0.18" stroke="${accent}" stroke-width="2"/>
+          <rect x="132" y="100" width="256" height="64" rx="12" fill="${accent}" opacity="0.22"/>
+          <rect x="150" y="190" width="220" height="28" rx="8" fill="${accent}" opacity="0.34"/>
+          <rect x="240" y="225" width="40" height="18" rx="6" fill="${accent}" opacity="0.4"/>
+          <rect x="180" y="260" width="160" height="22" rx="11" fill="${accent}" opacity="0.3"/>
+          <text x="260" y="150" text-anchor="middle" fill="#F4FBFF" font-size="22" font-family="Arial, sans-serif" font-weight="700">${title}</text>
+          <text x="260" y="242" text-anchor="middle" fill="#F4FBFF" font-size="14" font-family="Arial, sans-serif" opacity="0.9">AI Accelerator</text>
+        </svg>
+      `;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+
+    function renderHardwareCards() {
+      const cards = document.getElementById("hardwareCards");
+      cards.innerHTML = hardwareOptions.map((option) => `
+        <button class="hardware-card ${selectedHardwareId === option.id ? "active" : ""}" type="button" data-hardware-id="${option.id}">
+          <strong>${option.name}</strong>
+          <small>${option.vramGB} GB VRAM · ${option.tops} TOPS</small>
+        </button>
+      `).join("");
+
+      cards.querySelectorAll(".hardware-card").forEach((button) => {
+        button.addEventListener("click", () => {
+          selectedHardwareId = button.dataset.hardwareId;
+          renderHardwareCards();
+          updateHardwareValidator();
+        });
+      });
+
+      const current = hardwareOptions.find(opt => opt.id === selectedHardwareId);
+      document.getElementById("hardwareVisual").src = current.image;
+    }
+
+    function updateHardwareValidator() {
+      const params = Number(document.getElementById("modelParams").value) || 0;
+      const precision = document.getElementById("precisionSelect").value;
+      const hardware = hardwareOptions.find(opt => opt.id === selectedHardwareId);
+
+      const bytesPerParam = precision === "INT8" ? 1 : 2;
+      const requiredVRAM = params * bytesPerParam * 2.4;
+      const requiredTOPS = params * (precision === "INT8" ? 1.8 : 2.6);
+
+      const vramPass = requiredVRAM <= hardware.vramGB;
+      const topsPass = requiredTOPS <= hardware.tops;
+      const pass = vramPass && topsPass;
+
+      document.getElementById("requiredVRAM").textContent = `${requiredVRAM.toFixed(1)} GB`;
+      document.getElementById("requiredTOPS").textContent = `${requiredTOPS.toFixed(1)} TOPS`;
+
+      const badge = document.getElementById("resultBadge");
+      badge.textContent = pass ? "PASS" : "INSUFFICIENT HEADROOM";
+      badge.classList.toggle("result-pass", pass);
+      badge.classList.toggle("result-fail", !pass);
+
+      const memoryHeadroom = ((hardware.vramGB - requiredVRAM) / hardware.vramGB) * 100;
+      const computeHeadroom = ((hardware.tops - requiredTOPS) / hardware.tops) * 100;
+
+      let suggestionText = "";
+      if (pass) {
+        suggestionText = `
+          This workload fits within the selected hardware profile.
+          Memory headroom is ${Math.max(0, memoryHeadroom).toFixed(0)}% and compute headroom is ${Math.max(0, computeHeadroom).toFixed(0)}%.
+          The ${hardware.name} has enough VRAM and throughput for a ${precision} deployment at ${params.toFixed(1)}B parameters, assuming reasonable activation buffering and inference scheduling.
+        `;
+      } else {
+        const clusterMultiplier = Math.max(2, Math.ceil(Math.max(requiredVRAM / hardware.vramGB, requiredTOPS / hardware.tops)));
+        let clusterCopy = `${clusterMultiplier}x ${hardware.name}`;
+        if (hardware.id === "edge_npu") clusterCopy = `${clusterMultiplier}x Edge NPU nodes clustered via device interconnect`;
+        if (hardware.id === "dgx_spark") clusterCopy = `${clusterMultiplier}x NVIDIA DGX Spark modules clustered via NVLink and orchestration`;
+        if (hardware.id === "rtx_6000_blackwell") clusterCopy = `${clusterMultiplier}x RTX 6000 Blackwell modules clustered via NVLink`;
+        suggestionText = `
+          The workload exceeds the current hardware envelope.
+          Required model memory is ${requiredVRAM.toFixed(1)} GB versus ${hardware.vramGB} GB available, and required compute is ${requiredTOPS.toFixed(1)} TOPS versus ${hardware.tops} TOPS available.
+          This fails on both memory and throughput, so a clustered configuration is recommended:
+          ${clusterCopy}.
+          Use the additional headroom to parallelize the model and split inference batches on a tighter low-latency graph.
+        `;
+      }
+
+      document.getElementById("resultText").innerHTML = `
+        <strong>Memory Headroom:</strong> ${Number.isFinite(memoryHeadroom) ? `${Math.max(0, memoryHeadroom).toFixed(0)}%` : "0%"}<br>
+        <strong>Compute Headroom:</strong> ${Number.isFinite(computeHeadroom) ? `${Math.max(0, computeHeadroom).toFixed(0)}%` : "0%"}<br><br>
+        ${suggestionText}
+      `;
+    }
+
+    function updateMarketControls() {
+      const capture = Number(document.getElementById("captureSlider").value);
+      const growth = Number(document.getElementById("growthSlider").value);
+
+      document.getElementById("captureValue").textContent = `${capture}%`;
+      document.getElementById("growthValue").textContent = `${growth}%`;
+
+      const baseVolume = 1800000;
+      const patientVolume = baseVolume * (1 + (growth / 100));
+      const marketValue = patientVolume * 2600;
+
+      const chakraValue = marketValue * (capture / 100);
+      const competitorShare = {
+        CHAKRA: capture / 100,
+        "GI Genius": 0.065,
+        "ENDO-AID": 0.058,
+        SKOUT: 0.046
+      };
+
+      const chartData = [
+        { label: "CHAKRA", value: chakraValue },
+        { label: "GI Genius", value: marketValue * competitorShare["GI Genius"] },
+        { label: "ENDO-AID", value: marketValue * competitorShare["ENDO-AID"] },
+        { label: "SKOUT", value: marketValue * competitorShare["SKOUT"] }
+      ];
+
+      document.getElementById("annualValue").textContent = formatCurrency(chakraValue);
+      document.getElementById("patientVolume").textContent = `${Math.round(patientVolume).toLocaleString("en-IN")}`;
+      document.getElementById("projectedReturn").textContent = formatCurrency(chakraValue * 0.72);
+
+      const ctx = document.getElementById("marketChart").getContext("2d");
+
+      if (window.marketChartInstance) {
+        window.marketChartInstance.destroy();
+      }
+
+      window.marketChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: chartData.map(item => item.label),
+          datasets: [{
+            label: "Projected Captured Value",
+            data: chartData.map(item => item.value),
+            backgroundColor: [
+              "#00E5FF",
+              "#7AF7C3",
+              "#A6E9FF",
+              "#B6F1D3"
+            ],
+            borderColor: [
+              "#00E5FF",
+              "#7AF7C3",
+              "#A6E9FF",
+              "#B6F1D3"
+            ],
+            borderWidth: 1.2,
+            borderRadius: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `Captured Value: ${formatCurrency(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#D8EBF8" },
+              grid: { display: false }
+            },
+            y: {
+              ticks: {
+                color: "#D8EBF8",
+                callback: (value) => `₹${(Number(value) / 10000000).toFixed(1)}Cr`
+              },
+              grid: { color: "rgba(120,249,242,0.08)" },
+              title: {
+                display: true,
+                text: "Value (₹)",
+                color: "#F4FBFF"
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function initTabs() {
+      const tabs = document.querySelectorAll(".tab-btn");
+      tabs.forEach((button) => {
+        button.addEventListener("click", () => {
+          const tabId = button.dataset.tab;
+          tabs.forEach(btn => btn.classList.toggle("active", btn === button));
+          document.querySelectorAll(".tab-panel").forEach(panel => {
+            panel.classList.toggle("active", panel.id === tabId);
+          });
+        });
+      });
+    }
+
+    function initInvestmentTab() {
+      renderAccordion();
+      refreshDashboard();
+    }
+
+    function initHardwareTab() {
+      renderHardwareCards();
+      updateHardwareValidator();
+      document.getElementById("modelParams").addEventListener("input", updateHardwareValidator);
+      document.getElementById("precisionSelect").addEventListener("change", updateHardwareValidator);
+    }
+
+    function initMarketTab() {
+      document.getElementById("captureSlider").addEventListener("input", updateMarketControls);
+      document.getElementById("growthSlider").addEventListener("input", updateMarketControls);
+      updateMarketControls();
+    }
+
+    initTabs();
+    initInvestmentTab();
+    initHardwareTab();
+    initMarketTab();
+  </script>
+</body>
+</html>
